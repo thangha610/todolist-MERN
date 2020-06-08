@@ -32,6 +32,7 @@ class App extends React.Component<ITodoAppProps, ITodoAppState> implements ITodo
       this.setState(
         { todoItems: [...data] }
       )
+      console.log(this.state.todoItems)
     })
   }
 
@@ -39,7 +40,6 @@ class App extends React.Component<ITodoAppProps, ITodoAppState> implements ITodo
     let isCheckAll = todoItems.find((item: any) => item.isCompleted === false)
     isCheckAll === undefined ? this.isCheckAll = true : this.isCheckAll = false;
     this.forceUpdate()
-    console.log(this.isCheckAll, 29392394)
   }
 
   public handleNewTodoKeyDown(event: React.KeyboardEvent) {
@@ -77,9 +77,8 @@ class App extends React.Component<ITodoAppProps, ITodoAppState> implements ITodo
     const { todoItems } = this.state;
     todoItems[index].isCompleted = !isCompleted;
     this.checkAllComplete(todoItems);
-    this.setState({
-      todoItems: todoItems
-    });
+    this.setStateTodo(todoItems);
+    TodoApi.updateItem(todoItems[index])
   }
 
   public async toggleAll() {
@@ -89,14 +88,18 @@ class App extends React.Component<ITodoAppProps, ITodoAppState> implements ITodo
       item.isCompleted = that.isCheckAll;
       return item;
     })
+    this.setStateTodo(todoItems);
+    todoItems.forEach(item => {
+      TodoApi.updateItem(item)
+    });
+  }
+
+  public setStateTodo(todoItems: Array<ITodoItem>) {
     this.setState({
       todoItems: [
         ...todoItems
       ]
-    })
-    todoItems.forEach(item => {
-      TodoApi.updateItem(item)
-    })
+    });
   }
 
   public destroy(item: any) {
@@ -104,24 +107,20 @@ class App extends React.Component<ITodoAppProps, ITodoAppState> implements ITodo
       return candidate !== item;
     });
     TodoApi.deleteItem(item._id);
-    this.setState({
-      todoItems: [
-        ...todoItems
-      ]
-    })
+    this.setStateTodo(todoItems);
   }
 
   public clearCompleted() {
     this.isCheckAll = false
-    let todoItems = this.state.todoItems.filter(function (todo: ITodoItem) {
+    let todoItems = this.state.todoItems.map(function (todo: ITodoItem) {
+      todo.isCompleted = false;
+      return todo;
+    });
+    let todoItemsUpdate = this.state.todoItems.filter(function (todo: ITodoItem) {
       return !todo.isCompleted;
     });
-    this.setState({
-      todoItems: [
-        ...todoItems
-      ]
-    })
-    todoItems.forEach(item => {
+    this.setStateTodo(todoItems);
+    todoItemsUpdate.forEach(item => {
       TodoApi.updateItem(item)
     })
   }
